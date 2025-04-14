@@ -126,9 +126,9 @@ class FilePNG:
         elif xmax < 0:
             self.pixfill(((graph_area_min[0]), graph_area_min[1]), ((graph_area_min[0]), graph_area_max[1]), color=(0, 0, 255))
 
-    def gradientgraph (self, importdata, xrange, yrange, graph_area_min, graph_area_max, sens, islog=False, colormin=(1, 0, 0), colornull=(1, 1, 1), colorzero=(0, 0, 0), colormax=(0, 0, 1):
-        px2x = (graph_area_max[1] - graph_area_min[1]) / (xrange[1] - xrange[0])
-        px2y = (graph_area_max[0] - graph_area_min[0]) / (yrange[1] - yrange[0])
+    def gradientgraph (self, importdata, xrange, yrange, graph_area_min, graph_area_max, sens, islog=False, colormin=(1, 0, 0), colornull=(1, 1, 1), colorzero=(0, 0, 0), colormax=(0, 0, 1)):
+        mesh = Ordere3dmesh(importdata)
+        mesh.pixelprintout(self, xrange, yrange, graph_area_min, graph_area_max, sens, islog, colormin, colornull, colorzero, colormax)
 
 
 
@@ -188,10 +188,55 @@ class Functionplot: #parent class, will plot f(x) = ax + b
         self.yrange=(ymin, ymax)
         self.px2 = (px2y, px2x)
 
-class ordere3dmesh:
+class Ordere3dmesh:
     def __init__(self, datapath):
         self.datapath = datapath
+        self.data = dict() #(ppmf1, ppmf2): val_float
+        self.nrows = 0
+        self.ncols = 0
+        self.f1SW = 0.0
+        self.f2SW = 0.0
+        self.f1left = 0.0
+        self.f2left = 0.0
+        self.stepperrow = 0.0
+        self.steppercol = 0.0
 
+        self.loaddata()
+
+    def loaddata(self):
+        rowRN = 0
+        colRN = 0
+
+        with open(self.datapath, 'r') as f:
+            for line in f:
+                if line[0] == '#' or line[0] == '\n':
+                    if line[0:5] == '# row':
+                        rowRN = int(line.strip('\n').split(' ')[3])
+                        colRN = 0
+                    elif line[0:7] == '# F1LEFT':
+                        self.f1SW = float(line.split(' ')[3]) - float(line.split(' ')[7])
+                        self.f1left = float(line.split(' ')[3])
+                    elif line[0:7] == '# F2LEFT':
+                        self.f2SW = float(line.split(' ')[3]) - float(line.split(' ')[7])
+                        self.f2left = float(line.split(' ')[3])
+                    elif line[0:7] == '# NROWS':
+                        self.nrows = int(line.split(' ')[3])
+                        self.stepperrow = self.f1SW / self.nrows
+                    elif line[0:7] == '# NCOLS':
+                        self.ncols = int(line.split(' ')[3])
+                        self.steppercol = self.f2SW / self.ncols
+
+                else:
+                    line = line.strip('\n')
+                    self.data.update({(rowRN, colRN): float(line.strip('\n'))})
+                    colRN += 1
+
+        f.close()
+
+    def pixelprintout(self, target, xrange, yrange, graph_area_min, graph_area_max, sens, islog, colormin, colornull, colorzero, colormax):
+        px2x = (graph_area_max[1] - graph_area_min[1]) / (xrange[1] - xrange[0])
+        px2y = (graph_area_max[0] - graph_area_min[0]) / (yrange[1] - yrange[0])
+        syndots = dict()
 
 
 
