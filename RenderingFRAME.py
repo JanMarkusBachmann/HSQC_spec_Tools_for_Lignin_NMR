@@ -126,6 +126,13 @@ class FilePNG:
         elif xmax < 0:
             self.pixfill(((graph_area_min[0]), graph_area_min[1]), ((graph_area_min[0]), graph_area_max[1]), color=(0, 0, 255))
 
+    def gradientgraph (self, importdata, xrange, yrange, graph_area_min, graph_area_max, sens, islog=False, colormin=(1, 0, 0), colornull=(1, 1, 1), colorzero=(0, 0, 0), colormax=(0, 0, 1):
+        px2x = (graph_area_max[1] - graph_area_min[1]) / (xrange[1] - xrange[0])
+        px2y = (graph_area_max[0] - graph_area_min[0]) / (yrange[1] - yrange[0])
+
+
+
+
 class Functionplot: #parent class, will plot f(x) = ax + b
     def __init__(self, graph_area_min, graph_area_max, xmin, xmax, colorbit, color=(0, 0, 0)):
         self.graph_area_minpoint = graph_area_min
@@ -167,21 +174,23 @@ class Functionplot: #parent class, will plot f(x) = ax + b
             pxposition_x =  self.graph_area_minpoint[1] + (((dot[2]-self.xmin)*px2x)//1) #calculate the given x pixel position
 
             if (pxposition_y == pxposition_deltay):
-                self.functionpixeldata.update({(pxposition_y, pxposition_x): Pixel(red=self.color[0], green=self.color[1], blue=self.color[2], colorbitcount=self.colorbit)})
+                self.functionpixeldata.update({(pxposition_y + 1, pxposition_x): Pixel(red=self.color[0], green=self.color[1], blue=self.color[2], colorbitcount=self.colorbit)})
             else:
                 if round(pxposition_y) > round(pxposition_deltay):
                     ypixels = range(round(pxposition_deltay), round(pxposition_y), 1)
                 else:
                     ypixels = range(round(pxposition_y), round(pxposition_deltay), 1)
                 for ypixel in ypixels:
-                    self.functionpixeldata.update({(ypixel, pxposition_x): Pixel(red=self.color[0],
+                    self.functionpixeldata.update({(ypixel + 1, pxposition_x): Pixel(red=self.color[0],
                                                                                  green=self.color[1],
                                                                                  blue=self.color[2],
                                                                                  colorbitcount=self.colorbit)})
         self.yrange=(ymin, ymax)
         self.px2 = (px2y, px2x)
 
-
+class ordere3dmesh:
+    def __init__(self, datapath):
+        self.datapath = datapath
 
 
 
@@ -189,9 +198,9 @@ class Functionplot: #parent class, will plot f(x) = ax + b
 
 #test = Pixel(preset='g', colorbitcount=16)
 #print(test.color)
-test = FilePNG(256, 256, 8, background='w', name='punane')
+test = FilePNG(300, 300, 8, background='w', name='punane')
 test.pixfill((100,100), (200, 200), color=(0, 255, 0))
 test.pixfill([115, 105], [125, 135])
 test.letterwrite(120, 120, "tere!", 'r')
-test.graph((100,100), (200, 200), -20, 2)
+test.graph((100,100), (200, 200), -2, 2)
 test.filewrite()
