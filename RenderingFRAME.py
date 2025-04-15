@@ -1,3 +1,5 @@
+import math
+
 import png
 import font5X7 as fonts
 
@@ -191,7 +193,7 @@ class Functionplot: #parent class, will plot f(x) = ax + b
 class Ordere3dmesh:
     def __init__(self, datapath):
         self.datapath = datapath
-        self.data = dict() #(ppmf1, ppmf2): val_float
+        self.data = dict() #(f1, f2): val_float))
         self.nrows = 0
         self.ncols = 0
         self.f1SW = 0.0
@@ -233,11 +235,74 @@ class Ordere3dmesh:
 
         f.close()
 
-    def pixelprintout(self, target, xrange, yrange, graph_area_min, graph_area_max, sens, islog, colormin, colornull, colorzero, colormax):
-        px2x = (graph_area_max[1] - graph_area_min[1]) / (xrange[1] - xrange[0])
-        px2y = (graph_area_max[0] - graph_area_min[0]) / (yrange[1] - yrange[0])
-        syndots = dict()
+    def pixelprintout(self, target, xrange, yrange, graph_area_min, graph_area_max, sens, islog, colormin, colorzero, colornull, colormax):
+        #calculate how many pixels one ppm of spectral data would be, since there is a given range in poth axies, it might varie betweenm function calls
 
+        px2f1 = (graph_area_max[1] - graph_area_min[1]) / (xrange[1] - xrange[0])
+        px2f2 = (graph_area_max[0] - graph_area_min[0]) / (yrange[1] - yrange[0])
+
+        # calulate the color gradient values that are used to represent spectral data with colors
+        # colormin represent minimum value(negative) or furthest negative value from zero that spectra can have
+        # colormax represent maximum value(negative) or furthest negative value from zero that spectra can have
+        # colorzero is the color value that pixel will approach while its value gets near to zero
+        # colornull is the color of a pixel that has no data or has value that is under sens
+
+        # colorvectors are calculated to later be multiplied by scalar value, this allows to easily calulate given pixel color value
+
+        vec_zero2min = (colormin[0] - colorzero[0], colormin[1] - colorzero[1], colormin[2] - colorzero[2]) #RGB
+        vec_zero2max = (colormax[0] - colorzero[0], colormax[1] - colorzero[1], colormax[2] - colorzero[2]) #RGB
+
+        # calculate needed matrix of pixel in given spectra
+        startrow = yrange[0] // self.stepperrow
+        endrow = yrange[1] // self.stepperrow
+        startcol = xrange[0] // self.steppercol
+        endcol = xrange[1] // self.steppercol
+        synpxdots = dict() # {(pxrow, pxcol): Pixel()}
+        rowRN = startrow
+        colRN = startcol
+        while rowRN <= endrow:
+            while colRN <= endcol:
+                fatneighbours()
+                if val >= sens:
+                    synpxdots.update({(rowRN, colRN): Pixel()})
+                colRN += 1
+            colRN = startcol
+            rowRN += 1
+
+    def fatneighbours(self, f1, f2):
+        # calculate the value of artificial point in position (f1, f2) depending on their neighbours weighted average
+
+        rowRN = f1//self.stepperrow
+        colRN = f2//self.steppercol
+        weight = 0
+        val_weight = 0
+
+        distanse = math.sqrt((rowRN*self.stepperrow - f1)**2 + ((colRN*self.steppercol - f2)**2))
+        weight += 1/(distanse**2)
+        val_weight += self.data[(rowRN, colRN)] / (distanse**2)
+
+        rowRN = f1 // self.stepperrow + 1
+        colRN = f2 // self.steppercol
+
+        distanse = math.sqrt((rowRN * self.stepperrow - f1) ** 2 + ((colRN * self.steppercol - f2) ** 2))
+        weight += 1 / (distanse ** 2)
+        val_weight += self.data[(rowRN, colRN)] / (distanse ** 2)
+
+        rowRN = f1 // self.stepperrow
+        colRN = f2 // self.steppercol + 1
+
+        distanse = math.sqrt((rowRN * self.stepperrow - f1) ** 2 + ((colRN * self.steppercol - f2) ** 2))
+        weight += 1 / (distanse ** 2)
+        val_weight += self.data[(rowRN, colRN)] / (distanse ** 2)
+
+        rowRN = f1 // self.stepperrow + 1
+        colRN = f2 // self.steppercol + 1
+
+        distanse = math.sqrt((rowRN * self.stepperrow - f1) ** 2 + ((colRN * self.steppercol - f2) ** 2))
+        weight += 1 / (distanse ** 2)
+        val_weight += self.data[(rowRN, colRN)] / (distanse ** 2)
+
+        return val_weight/weight
 
 
 
@@ -248,4 +313,5 @@ test.pixfill((100,100), (200, 200), color=(0, 255, 0))
 test.pixfill([115, 105], [125, 135])
 test.letterwrite(120, 120, "tere!", 'r')
 test.graph((100,100), (200, 200), -2, 2)
+test.gradientgraph("")
 test.filewrite()
