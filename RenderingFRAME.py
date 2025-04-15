@@ -199,7 +199,9 @@ class Ordere3dmesh:
         self.f1SW = 0.0
         self.f2SW = 0.0
         self.f1left = 0.0
+        self.f1right = 0.0
         self.f2left = 0.0
+        self.f2right = 0.0
         self.stepperrow = 0.0
         self.steppercol = 0.0
 
@@ -214,13 +216,15 @@ class Ordere3dmesh:
                 if line[0] == '#' or line[0] == '\n':
                     if line[0:5] == '# row':
                         rowRN = int(line.strip('\n').split(' ')[3])
-                        colRN = 0
-                    elif line[0:7] == '# F1LEFT':
+                        colRN = self.ncols - 1
+                    elif line[0:8] == '# F1LEFT':
                         self.f1SW = float(line.split(' ')[3]) - float(line.split(' ')[7])
                         self.f1left = float(line.split(' ')[3])
-                    elif line[0:7] == '# F2LEFT':
+                        self.f1right = float(line.split(' ')[7])
+                    elif line[0:8] == '# F2LEFT':
                         self.f2SW = float(line.split(' ')[3]) - float(line.split(' ')[7])
                         self.f2left = float(line.split(' ')[3])
+                        self.f2right = float(line.split(' ')[7])
                     elif line[0:7] == '# NROWS':
                         self.nrows = int(line.split(' ')[3])
                         self.stepperrow = self.f1SW / self.nrows
@@ -230,16 +234,16 @@ class Ordere3dmesh:
 
                 else:
                     line = line.strip('\n')
-                    self.data.update({(rowRN, colRN): float(line.strip('\n'))})
-                    colRN += 1
+                    self.data.update({(self.nrows - rowRN, colRN): float(line.strip('\n'))})
+                    colRN -= 1
 
         f.close()
 
     def pixelprintout(self, target, xrange, yrange, graph_area_min, graph_area_max, sens, islog, colormin, colorzero, colornull, colormax):
-        #calculate how many pixels one ppm of spectral data would be, since there is a given range in poth axies, it might varie betweenm function calls
+        #calculate how many pixels one ppm of spectral data would be, since there is a given range in both axies, it might varie betweenm function calls
 
-        px2f1 = (graph_area_max[1] - graph_area_min[1]) / (xrange[1] - xrange[0])
-        px2f2 = (graph_area_max[0] - graph_area_min[0]) / (yrange[1] - yrange[0])
+        f1_2px = (yrange[1] - yrange[0]) / (graph_area_max[1] - graph_area_min[1])
+        f2_2px = (xrange[1] - xrange[0]) / (graph_area_max[0] - graph_area_min[0])
 
         # calulate the color gradient values that are used to represent spectral data with colors
         # colormin represent minimum value(negative) or furthest negative value from zero that spectra can have
@@ -248,59 +252,102 @@ class Ordere3dmesh:
         # colornull is the color of a pixel that has no data or has value that is under sens
 
         # colorvectors are calculated to later be multiplied by scalar value, this allows to easily calulate given pixel color value
+        # calculate needed matrix of pixel in given spectra
+        # startrow = yrange[0] #pxval f1
+        # endrow = yrange[1] #pxval f1
+        # startcol = xrange[0] # pxval f2
+        # endcol = xrange[1] self.steppercol #pxval f2
 
         vec_zero2min = (colormin[0] - colorzero[0], colormin[1] - colorzero[1], colormin[2] - colorzero[2]) #RGB
         vec_zero2max = (colormax[0] - colorzero[0], colormax[1] - colorzero[1], colormax[2] - colorzero[2]) #RGB
 
-        # calculate needed matrix of pixel in given spectra
-        startrow = yrange[0] // self.stepperrow
-        endrow = yrange[1] // self.stepperrow
-        startcol = xrange[0] // self.steppercol
-        endcol = xrange[1] // self.steppercol
-        synpxdots = dict() # {(pxrow, pxcol): Pixel()}
-        rowRN = startrow
-        colRN = startcol
-        while rowRN <= endrow:
-            while colRN <= endcol:
-                fatneighbours()
-                if val >= sens:
-                    synpxdots.update({(rowRN, colRN): Pixel()})
-                colRN += 1
-            colRN = startcol
-            rowRN += 1
+        min = 0.0
+        max = 0.0
+        syndots = [] # [f1, f2, pxrow, pxcol, float_val]
+        rowRN = yrange[0] #f1
+        colRN = xrange[0] #f2
+        while rowRN <= yrange[1]:
+            while colRN <= xrange[1]:
+                val = self.fatneighbours(rowRN, colRN)
+                if (abs(val) >= sens):
+                    syndots.append([rowRN, colRN, round(graph_area_min[0] + (rowRN - yrange[0])/f1_2px), round(graph_area_max[1] - (colRN - xrange[0])/f2_2px), val])
+                    if max < val:
+                        max = val
+                    elif min > val:
+                        min = val
+                else:
+                    target.data.update({(round(graph_area_min[0] + (rowRN - yrange[0])/f1_2px), round(graph_area_max[1] - (colRN - xrange[0])/f2_2px)): Pixel(colornull[0], colornull[1], colornull[2], target.colorbitnum)})
+                colRN += f2_2px
+            colRN = xrange[0]
+            rowRN += f1_2px
+
+        if islog:
+            min = -math.log(abs(min))
+            max = math.log(abs(max))
+        #calculate pixel color values
+        for dot in syndots:
+            val = dot[4]
+            neg = False
+            if val < 0.0:
+                neg = True
+                val = -val
+            colorRN = colorzero
+            if islog and neg:
+                val = -math.log10(val)
+            else:
+                val = math.log10(val)
+            if val < 0.0:
+                colorRN = (round(colorzero[0] + vec_zero2min[0] * (val/min)), round(colorzero[1] + vec_zero2min[1] * (val/min)), round(colorzero[2] + vec_zero2min[2] * (val/min)))
+            elif val > 0.0:
+                colorRN = (round(colorzero[0] + vec_zero2max[0] * (val/max)), round(colorzero[1] + vec_zero2max[1] * (val/max)), round(colorzero[2] + vec_zero2max[2] * (val/max)))
+            else:
+                print(f'baddot> ordered3dmesh > pixelprintout > calculate oixel color: dot {dot}')
+            target.data.update({(dot[2], dot[3]): Pixel(colorRN[0], colorRN[1], colorRN[2], target.colorbitnum)})
 
     def fatneighbours(self, f1, f2):
         # calculate the value of artificial point in position (f1, f2) depending on their neighbours weighted average
 
-        rowRN = f1//self.stepperrow
-        colRN = f2//self.steppercol
+        rowRN = round(f1//self.stepperrow)
+        colRN = round(f2//self.steppercol)
         weight = 0
         val_weight = 0
 
         distanse = math.sqrt((rowRN*self.stepperrow - f1)**2 + ((colRN*self.steppercol - f2)**2))
-        weight += 1/(distanse**2)
-        val_weight += self.data[(rowRN, colRN)] / (distanse**2)
+        if distanse == 0.0:
+            return self.data[(rowRN, colRN)]
+        else:
+            weight += 1/(distanse**2)
+            val_weight += (self.data[(rowRN, colRN)] / (distanse**2))
 
         rowRN = f1 // self.stepperrow + 1
         colRN = f2 // self.steppercol
 
         distanse = math.sqrt((rowRN * self.stepperrow - f1) ** 2 + ((colRN * self.steppercol - f2) ** 2))
-        weight += 1 / (distanse ** 2)
-        val_weight += self.data[(rowRN, colRN)] / (distanse ** 2)
+        if distanse == 0.0:
+            return self.data[(rowRN, colRN)]
+        else:
+            weight += 1 / (distanse ** 2)
+            val_weight += self.data[(rowRN, colRN)] / (distanse ** 2)
 
         rowRN = f1 // self.stepperrow
         colRN = f2 // self.steppercol + 1
 
         distanse = math.sqrt((rowRN * self.stepperrow - f1) ** 2 + ((colRN * self.steppercol - f2) ** 2))
-        weight += 1 / (distanse ** 2)
-        val_weight += self.data[(rowRN, colRN)] / (distanse ** 2)
+        if distanse == 0.0:
+            return self.data[(rowRN, colRN)]
+        else:
+            weight += 1 / (distanse ** 2)
+            val_weight += self.data[(rowRN, colRN)] / (distanse ** 2)
 
         rowRN = f1 // self.stepperrow + 1
         colRN = f2 // self.steppercol + 1
 
         distanse = math.sqrt((rowRN * self.stepperrow - f1) ** 2 + ((colRN * self.steppercol - f2) ** 2))
-        weight += 1 / (distanse ** 2)
-        val_weight += self.data[(rowRN, colRN)] / (distanse ** 2)
+        if distanse == 0.0:
+            return self.data[(rowRN, colRN)]
+        else:
+            weight += 1 / (distanse ** 2)
+            val_weight += self.data[(rowRN, colRN)] / (distanse ** 2)
 
         return val_weight/weight
 
@@ -308,10 +355,10 @@ class Ordere3dmesh:
 
 #test = Pixel(preset='g', colorbitcount=16)
 #print(test.color)
-test = FilePNG(300, 300, 8, background='w', name='punane')
-test.pixfill((100,100), (200, 200), color=(0, 255, 0))
-test.pixfill([115, 105], [125, 135])
-test.letterwrite(120, 120, "tere!", 'r')
-test.graph((100,100), (200, 200), -2, 2)
-test.gradientgraph("")
+test = FilePNG(1000, 1000, 16, background='w', name='punane')
+# test.pixfill((100,100), (200, 200), color=(0, 255, 0))
+# test.pixfill([115, 105], [125, 135])
+# test.letterwrite(120, 120, "tere!", 'r')
+# test.graph((100,100), (200, 200), -2, 2)
+test.gradientgraph("HSQCdata/HSQC-250404-EtOH-frHL-SA-ECH.txt", (2, 6), (20, 80), (5,5), (995, 995), 10000, True, (65535, 0, 0),(32000, 32000, 32000), (0, 0, 0),  (0, 0, 65535))
 test.filewrite()
