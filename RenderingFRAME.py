@@ -29,9 +29,25 @@ class FilePNG:
         self.data = dict() #tuple(row, col): Pixle()
         self.name = name
 
+        print(f'Initializing FilePNG object, coloring canvas of {self.width * self.height} pixels')
+        stars = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+        counter = 0
+        counterstep = (self.width * self.height) // len(stars)
+        nstars = 0
+
         for row in range(self.height):
             for col in range(self.width):
+
+                counter += 1
+                if counter >= counterstep:
+                    counterstep += (self.width * self.height) // len(stars)
+                    print(f'Pixel coloring progress: [{''.join(stars)}]')
+                    stars[nstars] = '*'
+                    nstars += 1
+
                 self.data.update({(row, col): Pixel(preset=background, colorbitcount=self.colorbitnum)})
+        print(f'Pixel coloring progress: [{''.join(stars)}]')
+        print(f'Pixel coloring progress: done!')
 
     def filewrite(self, newname='-'):
         filename = ''
@@ -39,7 +55,7 @@ class FilePNG:
             filename = f'{newname}.png'
         else:
             filename = f'{self.name}.png'
-
+        print(f'Writing {filename}')
         filedata = []
         for row in range(self.height):
             rowdata = []
@@ -51,6 +67,7 @@ class FilePNG:
         writer = png.Writer(self.width, self.height, bitdepth=self.colorbitnum, greyscale=False)
         with open(filename, 'wb') as f:
             writer.write(f, filedata)
+        print(f'Writing {filename}, done!')
 
     def letterwrite(self, posrow, poscol, text, textcolor='r', scale=1):
         letterboxrows = fonts.sizerow * scale
@@ -82,7 +99,8 @@ class FilePNG:
                         pixrow = - pix[0] * scale + centr1stchar[0]
                         pixcol = pix[1] * scale + centr1stchar[1]
                         self.data.update({(pixrow, pixcol): Pixel(colorbitcount=self.colorbitnum, preset=textcolor)})
-                    return 0
+                    colepisode += 1
+                    continue
                 index = 0
                 for char in list(text.lower()):
                     for pix in fonts.capitalletters[char]:
@@ -95,7 +113,6 @@ class FilePNG:
                 colepisode += 1
             rowepisode += 1
 
-        return 0
 
     def pixfill(self, from_pos, to_pos, color=(0, 0, 0)):
         colorRN = list(color)
@@ -147,21 +164,21 @@ class FilePNG:
     def gradientgraph (self, importdata, xrange, yrange, xaxismaj, yaxismaj, axiscolor, textcolor, textscale, graph_area_min, graph_area_max, sens, islog, colormin, colornull, colorzero, colormax, ramp, exp):
         mesh = Ordere3dmesh(importdata)
         mesh.pixelprintout(self, xrange, yrange, graph_area_min, graph_area_max, sens, islog, colormin, colornull, colorzero, colormax, ramp, exp)
-        px2y = (graph_area_max[1] - graph_area_min[1]) / (yrange[1] - yrange[0])
-        px2x = (graph_area_max[0] - graph_area_min[0]) / (xrange[1] - xrange[0])
+        px2y = (graph_area_max[0] - graph_area_min[0]) / (yrange[1] - yrange[0])
+        px2x = (graph_area_max[1] - graph_area_min[1]) / (xrange[1] - xrange[0])
 
         xRN = xrange[1]
         while xRN >= xrange[0]:
             self.pixfill((graph_area_min[0], round(graph_area_max[1] - (xRN-xrange[0])*px2x)), (graph_area_max[0], round(graph_area_max[1] - (xRN-xrange[0])*px2x)), color=axiscolor)
-            self.letterwrite(graph_area_min[0] - 4 * textscale, round(graph_area_max[1] - (xRN-xrange[0])*px2x), str(round(xRN, 2)), textcolor=textcolor, scale=textscale)
-            self.letterwrite(graph_area_max[0] + 4 * textscale, round(graph_area_max[1] - (xRN-xrange[0])*px2x), str(round(xRN, 2)), textcolor=textcolor, scale=textscale)
+            self.letterwrite(graph_area_min[0] - 8 * textscale, round(graph_area_max[1] - (xRN-xrange[0])*px2x), str(round(xRN, 2)), textcolor=textcolor, scale=textscale)
+            self.letterwrite(graph_area_max[0] + 8 * textscale, round(graph_area_max[1] - (xRN-xrange[0])*px2x), str(round(xRN, 2)), textcolor=textcolor, scale=textscale)
             xRN -= xaxismaj
 
         yRN = yrange[1]
         while yRN >= yrange[0]:
-            self.pixfill((round((yRN-yrange[0])*px2y+graph_area_min[0]), graph_area_min[1]), (round((yRN-yrange[0])*px2y+graph_area_min[0]), graph_area_max[0]), color=axiscolor)
-            self.letterwrite(round((yRN - yrange[0]) * px2y + graph_area_min[0]), graph_area_min[1] - 10 * textscale, str(round(yRN, 2)), textcolor=textcolor, scale=textscale)
-            self.letterwrite(round((yRN - yrange[0]) * px2y + graph_area_min[0]), graph_area_max[1] + 10 * textscale, str(round(yRN, 2)), textcolor=textcolor, scale=textscale)
+            self.pixfill((round((yRN-yrange[0]) * px2y + graph_area_min[0]), graph_area_min[1]), (round((yRN-yrange[0])*px2y+graph_area_min[0]), graph_area_max[1]), color=axiscolor)
+            self.letterwrite(round((yRN - yrange[0]) * px2y + graph_area_min[0]), graph_area_min[1] - 15 * textscale, str(round(yRN, 2)), textcolor=textcolor, scale=textscale)
+            self.letterwrite(round((yRN - yrange[0]) * px2y + graph_area_min[0]), graph_area_max[1] + 15 * textscale, str(round(yRN, 2)), textcolor=textcolor, scale=textscale)
 
             yRN -= yaxismaj
 
@@ -237,8 +254,9 @@ class Ordere3dmesh:
         self.f2right = 0.0
         self.stepperrow = 0.0
         self.steppercol = 0.0
-
+        print(f'Ordere3dmesh: reading file:{datapath}')
         self.loaddata()
+        print(f'Ordere3dmesh: reading complete file:{datapath}')
 
     def loaddata(self):
         rowRN = 0
@@ -275,8 +293,7 @@ class Ordere3dmesh:
     def pixelprintout(self, target, xrange, yrange, graph_area_min, graph_area_max, sens, islog, colormin, colorzero, colornull, colormax, ramp, exponent):
         #calculate how many pixels one ppm of spectral data would be, since there is a given range in both axies, it might varie betweenm function calls
 
-        f1_2px = (yrange[1] - yrange[0]) / (graph_area_max[1] - graph_area_min[1])
-        f2_2px = (xrange[1] - xrange[0]) / (graph_area_max[0] - graph_area_min[0])
+        print(f'Ordere3dmesh: pixelprintout, started sorting {(graph_area_max[0] - graph_area_min[0])*(graph_area_max[1] - graph_area_min[1])} pixels')
 
         # calulate the color gradient values that are used to represent spectral data with colors
         # colormin represent minimum value(negative) or furthest negative value from zero that spectra can have
@@ -291,9 +308,18 @@ class Ordere3dmesh:
         # startcol = xrange[0] # pxval f2
         # endcol = xrange[1] self.steppercol #pxval f2
 
+        stars = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+
+        f1_2px = (yrange[1] - yrange[0]) / (graph_area_max[0] - graph_area_min[0])
+        f2_2px = (xrange[1] - xrange[0]) / (graph_area_max[1] - graph_area_min[1])
+
         vec_zero2min = (colormin[0] - colorzero[0], colormin[1] - colorzero[1], colormin[2] - colorzero[2]) #RGB
         vec_zero2max = (colormax[0] - colorzero[0], colormax[1] - colorzero[1], colormax[2] - colorzero[2]) #RGB
 
+
+        counter = 0
+        counterstep = ((graph_area_max[0] - graph_area_min[0])*(graph_area_max[1] - graph_area_min[1]))//len(stars)
+        nstars = 0
         min = 0.0
         max = 0.0
         syndots = [] # [f1, f2, pxrow, pxcol, float_val]
@@ -301,6 +327,12 @@ class Ordere3dmesh:
         colRN = xrange[0] #f2
         while rowRN <= yrange[1]:
             while colRN <= xrange[1]:
+                counter += 1
+                if counter >= counterstep:
+                    counterstep += ((graph_area_max[0] - graph_area_min[0])*(graph_area_max[1] - graph_area_min[1])) //len(stars)
+                    print(f'Pixel filtering progress: [{''.join(stars)}]')
+                    stars[nstars] = '*'
+                    nstars += 1
                 val = self.fatneighbours(rowRN, colRN)
                 if (abs(val) >= sens):
                     syndots.append([rowRN, colRN, round(graph_area_min[0] + (rowRN - yrange[0])/f1_2px), round(graph_area_max[1] - (colRN - xrange[0])/f2_2px), val])
@@ -314,12 +346,31 @@ class Ordere3dmesh:
             colRN = xrange[0]
             rowRN += f1_2px
 
+        print(f'Pixel filtering progress: [{''.join(stars)}]')
+        print(f'Pixel filtering progress: done!')
+        print(f'Filtered out {(graph_area_max[0] - graph_area_min[0])*(graph_area_max[1] - graph_area_min[1]) - len(syndots)} pixels that are under sensitivity of {sens}')
+
         if islog:
             min = -math.log10(abs(min))
             max = math.log10(abs(max))
             sens = math.log10(abs(sens))
         #calculate pixel color values
+
+        print(f'Ordere3dmesh: pixelprintout, starting color calculations of {len(syndots)} pixels')
+        stars = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+        counter = 0
+        counterstep = len(syndots) // len(stars)
+        nstars = 0
+
         for dot in syndots:
+
+            counter += 1
+            if counter >= counterstep:
+                counterstep += len(syndots) // len(stars)
+                print(f'Pixel color calculation progress: [{''.join(stars)}]')
+                stars[nstars] = '*'
+                nstars += 1
+
             val = dot[4]
             neg = False
             if val < 0.0:
@@ -337,6 +388,9 @@ class Ordere3dmesh:
             else:
                 print(f'baddot> ordered3dmesh > pixelprintout > calculate oixel color: dot {dot}')
             target.data.update({(dot[2], dot[3]): Pixel(colorRN[0], colorRN[1], colorRN[2], target.colorbitnum)})
+
+        print(f'Pixel color calculation progress: [{''.join(stars)}]')
+        print(f'{len(syndots)} Pixel color calculation: done!')
 
     def fatneighbours(self, f1, f2):
         # calculate the value of artificial point in position (f1, f2) depending on their neighbours weighted average
