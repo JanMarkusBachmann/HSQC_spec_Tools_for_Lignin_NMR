@@ -62,7 +62,8 @@ class FilePNG:
 
         if (letterboxcols % 2) == 0:
             letterboxcols += 1
-
+        if (letterboxrows % 2) == 0:
+            letterboxrows += 1
 
         rowepisode = 0
 
@@ -88,7 +89,7 @@ class FilePNG:
                         pixrow = - pix[0] * scale + centr1stchar[0]
                         pixcol =pix[1] * scale + centr1stchar[1]
                         self.data.update({(pixrow, pixcol): Pixel(colorbitcount=self.colorbitnum, preset=textcolor)})
-                    centr1stchar = (posrow, (centr1stchar[1] + scale * (fonts.deadspace + 1 + fonts.capi_let_minmax[list(text.lower())[index]][1][1] - fonts.capi_let_minmax[list(text.lower())[index + 1]][0][1])))
+                    centr1stchar = (posrow + rowepisode - 1, (centr1stchar[1] + scale * (fonts.deadspace + 1 + fonts.capi_let_minmax[list(text.lower())[index]][1][1] - fonts.capi_let_minmax[list(text.lower())[index + 1]][0][1])))
                     if index < len(text)-2:
                         index += 1
                 colepisode += 1
@@ -143,7 +144,7 @@ class FilePNG:
         elif xmax < 0:
             self.pixfill(((graph_area_min[0]), graph_area_min[1]), ((graph_area_min[0]), graph_area_max[1]), color=(0, 0, 255))
 
-    def gradientgraph (self, importdata, xrange, yrange, xaxismaj, yaxismaj, axiscolor, textcolor, graph_area_min, graph_area_max, sens, islog, colormin, colornull, colorzero, colormax, ramp, exp):
+    def gradientgraph (self, importdata, xrange, yrange, xaxismaj, yaxismaj, axiscolor, textcolor, textscale, graph_area_min, graph_area_max, sens, islog, colormin, colornull, colorzero, colormax, ramp, exp):
         mesh = Ordere3dmesh(importdata)
         mesh.pixelprintout(self, xrange, yrange, graph_area_min, graph_area_max, sens, islog, colormin, colornull, colorzero, colormax, ramp, exp)
         px2y = (graph_area_max[1] - graph_area_min[1]) / (yrange[1] - yrange[0])
@@ -152,15 +153,15 @@ class FilePNG:
         xRN = xrange[1]
         while xRN >= xrange[0]:
             self.pixfill((graph_area_min[0], round(graph_area_max[1] - (xRN-xrange[0])*px2x)), (graph_area_max[0], round(graph_area_max[1] - (xRN-xrange[0])*px2x)), color=axiscolor)
-            self.letterwrite(graph_area_min[0] - 8, round(graph_area_max[1] - (xRN-xrange[0])*px2x), str(round(xRN, 2)), textcolor=textcolor)
-            self.letterwrite(graph_area_max[0] + 8, round(graph_area_max[1] - (xRN-xrange[0])*px2x), str(round(xRN, 2)), textcolor=textcolor)
+            self.letterwrite(graph_area_min[0] - 4 * textscale, round(graph_area_max[1] - (xRN-xrange[0])*px2x), str(round(xRN, 2)), textcolor=textcolor, scale=textscale)
+            self.letterwrite(graph_area_max[0] + 4 * textscale, round(graph_area_max[1] - (xRN-xrange[0])*px2x), str(round(xRN, 2)), textcolor=textcolor, scale=textscale)
             xRN -= xaxismaj
 
         yRN = yrange[1]
         while yRN >= yrange[0]:
             self.pixfill((round((yRN-yrange[0])*px2y+graph_area_min[0]), graph_area_min[1]), (round((yRN-yrange[0])*px2y+graph_area_min[0]), graph_area_max[0]), color=axiscolor)
-            self.letterwrite(round((yRN - yrange[0]) * px2y + graph_area_min[0]), graph_area_min[1] - 20, str(round(yRN, 2)), textcolor=textcolor)
-            self.letterwrite(round((yRN - yrange[0]) * px2y + graph_area_min[0]), graph_area_max[1] + 20, str(round(yRN, 2)), textcolor=textcolor)
+            self.letterwrite(round((yRN - yrange[0]) * px2y + graph_area_min[0]), graph_area_min[1] - 10 * textscale, str(round(yRN, 2)), textcolor=textcolor, scale=textscale)
+            self.letterwrite(round((yRN - yrange[0]) * px2y + graph_area_min[0]), graph_area_max[1] + 10 * textscale, str(round(yRN, 2)), textcolor=textcolor, scale=textscale)
 
             yRN -= yaxismaj
 
@@ -388,12 +389,4 @@ class Ordere3dmesh:
 
 
 
-#test = FilePNG(4000, 4000, 16, background='w', name='punane')
-test = FilePNG(100, 100, 16, background='w', name='punane')
-test.letterwrite(50, 50, "punane", 'r', scale=2)
-# test.pixfill((100,100), (200, 200), color=(0, 255, 0))
-# test.pixfill([115, 105], [125, 135])
-# test.letterwrite(120, 120, "tere!", 'r')
-# test.graph((100,100), (200, 200), -2, 2)
-#test.gradientgraph("HSQCdata/HSQC-250404-EtOH-frHL-SA-ECH.txt", (0.5, 9), (5, 140), 0.25, 5, (32000, 32000, 32000), 'r', (50,50), (3950, 3950), 10000, True, (65535, 0, 0),(32000, 65535, 32000), (65535, 65535, 65535),  (0, 0, 65535), 500, 5)
-test.filewrite()
+
