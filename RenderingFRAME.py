@@ -1,5 +1,6 @@
 import math
 
+import time
 import png
 import font5X7 as fonts
 
@@ -29,6 +30,8 @@ class FilePNG:
         self.data = dict() #tuple(row, col): Pixle()
         self.name = name
 
+        starttime = time.time()
+
         print(f'Initializing FilePNG object, coloring canvas of {self.width * self.height} pixels')
         stars = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
         counter = 0
@@ -46,8 +49,11 @@ class FilePNG:
                     nstars += 1
 
                 self.data.update({(row, col): Pixel(preset=background, colorbitcount=self.colorbitnum)})
+
+        endtime = time.time()
+        elapsed = endtime - starttime
         print(f'Pixel coloring progress: [{''.join(stars)}]')
-        print(f'Pixel coloring progress: done!')
+        print(f'Pixel coloring progress: done! Elapsed time: {elapsed:.2f} seconds')
 
     def filewrite(self, newname='-'):
         filename = ''
@@ -55,6 +61,7 @@ class FilePNG:
             filename = f'{newname}.png'
         else:
             filename = f'{self.name}.png'
+        starttime = time.time()
         print(f'Writing {filename}')
         filedata = []
         for row in range(self.height):
@@ -67,7 +74,9 @@ class FilePNG:
         writer = png.Writer(self.width, self.height, bitdepth=self.colorbitnum, greyscale=False)
         with open(filename, 'wb') as f:
             writer.write(f, filedata)
-        print(f'Writing {filename}, done!')
+        endtime = time.time()
+        elapsed = endtime - starttime
+        print(f'Writing {filename}, done! Elapsed time: {elapsed:.2f} seconds')
 
     def letterwrite(self, posrow, poscol, text, textcolor='r', scale=1):
         letterboxrows = fonts.sizerow * scale
@@ -254,9 +263,12 @@ class Ordere3dmesh:
         self.f2right = 0.0
         self.stepperrow = 0.0
         self.steppercol = 0.0
+        starttime = time.time()
         print(f'Ordere3dmesh: reading file:{datapath}')
         self.loaddata()
-        print(f'Ordere3dmesh: reading complete file:{datapath}')
+        endtime = time.time()
+        elapsed = endtime - starttime
+        print(f'Ordere3dmesh: reading complete file:{datapath}! Elapsed time: {elapsed:.2f} seconds')
 
     def loaddata(self):
         rowRN = 0
@@ -292,7 +304,7 @@ class Ordere3dmesh:
 
     def pixelprintout(self, target, xrange, yrange, graph_area_min, graph_area_max, sens, islog, colormin, colorzero, colornull, colormax, ramp, exponent):
         #calculate how many pixels one ppm of spectral data would be, since there is a given range in both axies, it might varie betweenm function calls
-
+        starttimeall = time.time()
         print(f'Ordere3dmesh: pixelprintout, started sorting {(graph_area_max[0] - graph_area_min[0])*(graph_area_max[1] - graph_area_min[1])} pixels')
 
         # calulate the color gradient values that are used to represent spectral data with colors
@@ -345,9 +357,10 @@ class Ordere3dmesh:
                 colRN += f2_2px
             colRN = xrange[0]
             rowRN += f1_2px
-
+        starttimemid=time.time()
+        elapsed = starttimemid - starttimeall
         print(f'Pixel filtering progress: [{''.join(stars)}]')
-        print(f'Pixel filtering progress: done!')
+        print(f'Pixel filtering progress: done! Elapsed time: {elapsed:.2f} seconds')
         print(f'Filtered out {(graph_area_max[0] - graph_area_min[0])*(graph_area_max[1] - graph_area_min[1]) - len(syndots)} pixels that are under sensitivity of {sens}')
 
         if islog:
@@ -389,8 +402,10 @@ class Ordere3dmesh:
                 print(f'baddot> ordered3dmesh > pixelprintout > calculate oixel color: dot {dot}')
             target.data.update({(dot[2], dot[3]): Pixel(colorRN[0], colorRN[1], colorRN[2], target.colorbitnum)})
 
+        endtimeall = time.time()
+        elapsed =  endtimeall - starttimemid
         print(f'Pixel color calculation progress: [{''.join(stars)}]')
-        print(f'{len(syndots)} Pixel color calculation: done!')
+        print(f'{len(syndots)} Pixel color calculation: done! Elapsed time: {elapsed:.2f} seconds')
 
     def fatneighbours(self, f1, f2):
         # calculate the value of artificial point in position (f1, f2) depending on their neighbours weighted average

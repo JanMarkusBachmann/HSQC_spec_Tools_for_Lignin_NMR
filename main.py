@@ -1,7 +1,8 @@
 import RenderingFRAME as fr
+import time
 
 spct = "HSQCdata/HSQC-250404-EtOH-frHL-FEN-ECH.txt"
-
+start = time.time()
 test = fr.FilePNG(4000, 4100, 16, background='w', name=spct.split('/')[-1].strip('.txt'))
 #test = fr.FilePNG(105, 22, 16, background='w', name='punane')
 #test.letterwrite(10, 52, "punane", 'r', scale=3)
@@ -29,3 +30,6 @@ test.gradientgraph(spct,
                    5)
 test.letterwrite(50, 200, spct.split('/')[-1].strip('.txt'), 'd', 6)
 test.filewrite()
+end = time.time()
+elapsed = end - start
+print(f'\nOperation time total: {elapsed:.2f} seconds')
