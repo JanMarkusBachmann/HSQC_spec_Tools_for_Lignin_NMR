@@ -9,6 +9,7 @@ class App(ctk.CTk):
         self.elemnts = []
         self.filereadpath = ''
         self.filereadpathline = 'Press and select file'
+        self.deadspacesize = 1
         self.currentfontdict = dict()
         self.currentfontdictsizes = dict()
 
@@ -53,7 +54,20 @@ class App(ctk.CTk):
         self.readfont()
 
     def readandeditfont(self):
-        #read
+        with open(self.filereadpath, 'r') as f:
+            isdict = False
+            issizedict = False
+            for line in f:
+                if line[0:9] == 'deadspace':
+                    self.deadspacesize = line.split(' ')[-1].strip('\n')
+                if isdict:
+                    let = line.strip('\t').strip('\n').split(':')[0]
+                    RN = []
+                    for cord in line.strip('\t').strip('\n').split(':')[1].split('), '):
+                        RN.append(cord.strip(' ').strip('(').strip('(').strip(')').strip(')').split(', '))
+                    print(f'letter: {let}, list:{RN}')
+                if line[0:16] == 'letters = dict({':
+                    isdict = True
         self.fonteditor()
 
     def fonteditor(self):
