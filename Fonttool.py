@@ -60,6 +60,9 @@ class App(ctk.CTk):
             for line in f:
                 if line[0:9] == 'deadspace':
                     self.deadspacesize = line.split(' ')[-1].strip('\n')
+                if line == ('})\n'):
+                    isdict = False
+                    issizedict = False
                 if isdict:
                     let = line.strip('\t').strip('\n').split(':')[0]
                     RN = []
@@ -68,6 +71,7 @@ class App(ctk.CTk):
                     print(f'letter: {let}, list:{RN}')
                 if line[0:16] == 'letters = dict({':
                     isdict = True
+
         self.fonteditor()
 
     def fonteditor(self):
