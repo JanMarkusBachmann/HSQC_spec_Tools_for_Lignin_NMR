@@ -12,6 +12,10 @@ class App(ctk.CTk):
         self.deadspacesize = 1
         self.currentfontdict = dict()
         self.currentfontdictsizes = dict()
+        self.currentfontletter = ''
+        self.fonteditor_pxfromzero_rows = 0
+        self.fonteditor_pxfromzero_cols = 0
+        self.pxframe = Pixelframeing(self, self.fonteditor_pxfromzero_rows, self.fonteditor_pxfromzero_cols)
 
         self.firstwindows()
 
@@ -63,20 +67,85 @@ class App(ctk.CTk):
                 if line == ('})\n'):
                     isdict = False
                     issizedict = False
-                if isdict:
-                    let = line.strip('\t').strip('\n').split(':')[0]
+                if isdict and line == """    ,' ': tuple()\n""":
+                    self.currentfontdict.update({' ': tuple()})
+                elif isdict:
+                    let = line.strip('\t').strip('\n').split(':')[0].strip(' ').strip(',')
                     RN = []
                     for cord in line.strip('\t').strip('\n').split(':')[1].split('), '):
-                        RN.append(cord.strip(' ').strip('(').strip('(').strip(')').strip(')').split(', '))
+                        temp = (cord.strip(' ').strip('(').strip('(').strip(')').strip(')').split(', '))
+                        RN.append(tuple((int(temp[0]), int(temp[1].strip('),')))))
+                    self.currentfontdict.update({let: tuple(RN)})
                     print(f'letter: {let}, list:{RN}')
+                if issizedict:
+                    let = line.strip('\t').strip('\n').split(':')[0].strip(' ').strip(',')
+                    RN = []
+                    for cord in line.strip('\t').strip('\n').split(':')[1].split('), '):
+                        temp = (cord.strip(' ').strip('(').strip('(').strip(')').strip(')').split(', '))
+                        RN.append(tuple((int(temp[0]), int(temp[1]))))
+                    self.currentfontdictsizes.update({let: tuple(RN)})
                 if line[0:16] == 'letters = dict({':
                     isdict = True
+                if line == 'minmax = dict({\n':
+                    issizedict = True
 
+        self.currentfontletter = self.currentfontdict.keys()[0]
         self.fonteditor()
 
     def fonteditor(self):
         self.depack()
 
+
+        self.repack()
+
+class Pixelframeing(ctk.CTkFrame):
+    def __init__(self, master, nrows, ncols, **kwargs):
+        super().__init__(master, **kwargs)
+        self.nrows = nrows #int rows
+        self.ncols = ncols #int cols
+        self.elements = [] #full of Pixelframeingcols objects
+        self.index = 0
+        self.gridreset()
+
+    def repack(self):
+        for obj in self.elements:
+            obj[1].pack(pady=5, side='down')
+
+    def depack(self):
+        for obj in self.elements:
+            obj[1].pack_forget()
+        self.elements = []
+
+    def gridreset(self):
+        self.depack()
+        for rownumb in range(-self.nrows, self.nrows + 1):
+            self.elements.append([rownumb, Pixelframeingcols(self, self.ncols, rownumb)])
+
+        self.repack()
+
+class Pixelframeingcols(ctk.CTkFrame):
+    def __init__(self, master, ncols, rownumb, **kwargs):
+        super().__init__(master, **kwargs)
+        self.elements = []
+        self.index = 0
+        self.ncols = ncols
+        self.rownumb = rownumb
+
+        self.gridreset()
+
+    def repack(self):
+        for obj in self.elements:
+            obj[1].pack(padx=5)
+
+    def depack(self):
+        for obj in self.elements:
+            obj[1].pack_forget()
+        self.elements = []
+
+    def gridreset(self):
+        self.depack()
+        for colnumb in range(-self.ncols, self.ncols + 1):
+            self.elements.append([colnumb, ctk.CTkButton(self, width=10, height=10, text='')])
         self.repack()
 
 
