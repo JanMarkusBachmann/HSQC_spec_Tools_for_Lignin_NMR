@@ -113,7 +113,6 @@ class App(ctk.CTk):
                         temp = (cord.strip(' ').strip('(').strip('(').strip(')').strip(')').split(', '))
                         RN.append(tuple((int(temp[0]), int(temp[1].strip('),')))))
                     self.currentfontdict.update({let: tuple(RN)})
-                    print(f'letter: {let}, list:{RN}')
                 if issizedict:
                     let = line.strip('\t').strip('\n').split(':')[0].strip(' ').strip(',')
                     RN = []
@@ -126,7 +125,7 @@ class App(ctk.CTk):
                 if line == 'minmax = dict({\n':
                     issizedict = True
 
-        #self.currentfontletter = self.currentfontdict.keys()[0]
+
         self.fonteditor()
     def fonteditor(self):
         self.depack()
