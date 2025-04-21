@@ -4,7 +4,7 @@ import tkinter.filedialog
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.geometry("500x400")
+        self.geometry("600x600")
 
         self.elemnts = []
         self.filereadpath = ''
@@ -12,10 +12,13 @@ class App(ctk.CTk):
         self.deadspacesize = 1
         self.currentfontdict = dict()
         self.currentfontdictsizes = dict()
-        self.currentfontletter = ''
+        self.currentfontletter = ' '
         self.fonteditor_pxfromzero_rows = 0
         self.fonteditor_pxfromzero_cols = 0
         self.pxframe = Pixelframeing(self, self.fonteditor_pxfromzero_rows, self.fonteditor_pxfromzero_cols)
+        self.pxframeletterentry = ctk.CTkEntry(self)
+        self.pxframeletterentry.bind('<Key-Return>', self.pxframeletterchange)
+        self.pxframelettermessage = ctk.CTkLabel(self, text="Enter the letter that you want to edit and press enter")
 
         self.firstwindows()
 
@@ -33,7 +36,6 @@ class App(ctk.CTk):
         self.elemnts.append(ctk.CTkButton(self, text="Read and modify a font from .py file", command=self.readfont))
         self.elemnts.append(ctk.CTkButton(self, text="create a font and save it as .py file", command=self.createfont))
         self.repack()
-
     def readfont(self):
         self.depack()
         if self.filereadpathline == 'Press and select file':
@@ -45,18 +47,53 @@ class App(ctk.CTk):
         self.elemnts.append(ctk.CTkButton(self, text='Edit font', command=self.readandeditfont))
         self.elemnts.append(ctk.CTkButton(self, text='Back', fg_color='red', hover_color='orange', command=self.firstwindows))
         self.repack()
-
     def createfont(self):
         self.depack()
+        self.elemnts.append(ctk.CTkLabel(self, text="Please press on a pixle to activate(white) or deactivate(black) it"))
+        #self.elemnts.append(ctk.CTkEntry(self, textvariable=self.currentfontletter))
+        self.elemnts.append(ctk.CTkFrame(self))
+        rowincB = ctk.CTkButton(self.elemnts[-1], text='Increase row pixels', command=self.increaserow)
+        rowincB.pack(side='left', padx=10)
+        rowdecB = ctk.CTkButton(self.elemnts[-1], text='decrease row pixels', command=self.decreaserow)
+        rowdecB.pack(side='left', padx=10)
+        self.elemnts.append(ctk.CTkFrame(self))
+        colincB = ctk.CTkButton(self.elemnts[-1], text='Increase row pixels', command=self.increasecolumn)
+        colincB.pack(side='left', padx=10)
+        coldecB = ctk.CTkButton(self.elemnts[-1], text='decrease row pixels', command=self.decreasecolumn)
+        coldecB.pack(side='left', padx=10)
+        self.elemnts.append(self.pxframelettermessage)
+        self.elemnts.append(self.pxframeletterentry)
+        self.elemnts.append(self.pxframe)
 
         self.repack()
-
+    def increaserow(self):
+        self.pxframe.nrows += 1
+        self.pxframe.gridreset()
+    def decreaserow(self):
+        if self.pxframe.nrows > 0:
+            self.pxframe.nrows -= 1
+            self.pxframe.gridreset()
+    def increasecolumn(self):
+        self.pxframe.ncols += 1
+        self.pxframe.gridreset()
+    def decreasecolumn(self):
+        if self.pxframe.ncols > 0:
+            self.pxframe.ncols -= 1
+            self.pxframe.gridreset()
+    def pxframeletterchange(self, event):
+        RN = self.pxframeletterentry.get()
+        if len(RN) > 1:
+            self.pxframelettermessage.configure(text="Plase enter a single character!")
+        else:
+            self.pxframelettermessage.configure(text="Enter the letter that you want to edit and press enter")
+            if RN != self.currentfontletter:
+                self.currentfontletter = RN
+                self.pxframe.gridreset()
     def pathselect(self):
         path = str(tkinter.filedialog.askopenfile())
         self.filereadpath = path.split("'")[1]
         self.filereadpathline = self.filereadpath.split('/')[-1]
         self.readfont()
-
     def readandeditfont(self):
         with open(self.filereadpath, 'r') as f:
             isdict = False
@@ -89,65 +126,96 @@ class App(ctk.CTk):
                 if line == 'minmax = dict({\n':
                     issizedict = True
 
-        self.currentfontletter = self.currentfontdict.keys()[0]
+        #self.currentfontletter = self.currentfontdict.keys()[0]
         self.fonteditor()
-
     def fonteditor(self):
         self.depack()
 
+        self.elemnts.append(self.pxframe)
 
         self.repack()
 
 class Pixelframeing(ctk.CTkFrame):
     def __init__(self, master, nrows, ncols, **kwargs):
         super().__init__(master, **kwargs)
+        self.appmaster = master
         self.nrows = nrows #int rows
         self.ncols = ncols #int cols
-        self.elements = [] #full of Pixelframeingcols objects
-        self.index = 0
+        self.rows = [] #full of Pixelframeingcols objects
+        self.buttons = dict() # (row,col): Pxbutton()
         self.gridreset()
 
     def repack(self):
-        for obj in self.elements:
-            obj[1].pack(pady=5, side='down')
+        for obj in self.rows:
+            obj.pack(side='bottom')
 
     def depack(self):
-        for obj in self.elements:
-            obj[1].pack_forget()
-        self.elements = []
+        for obj in self.rows:
+            obj.pack_forget()
+        self.rows = []
 
     def gridreset(self):
         self.depack()
         for rownumb in range(-self.nrows, self.nrows + 1):
-            self.elements.append([rownumb, Pixelframeingcols(self, self.ncols, rownumb)])
+            self.rows.append(Pixelframeingrow(self, self.ncols, rownumb))
 
         self.repack()
 
-class Pixelframeingcols(ctk.CTkFrame):
+class Pixelframeingrow(ctk.CTkFrame):
     def __init__(self, master, ncols, rownumb, **kwargs):
         super().__init__(master, **kwargs)
-        self.elements = []
-        self.index = 0
+        self.framemaster = master
+        self.buttons = []
         self.ncols = ncols
         self.rownumb = rownumb
 
         self.gridreset()
 
     def repack(self):
-        for obj in self.elements:
-            obj[1].pack(padx=5)
+        for obj in self.buttons:
+            obj.pack(side='left')
 
     def depack(self):
-        for obj in self.elements:
-            obj[1].pack_forget()
-        self.elements = []
+        for obj in self.buttons:
+            obj.pack_forget()
+        self.buttons = []
 
     def gridreset(self):
         self.depack()
         for colnumb in range(-self.ncols, self.ncols + 1):
-            self.elements.append([colnumb, ctk.CTkButton(self, width=10, height=10, text='')])
+            self.buttons.append(Pxbutton(self, colnumb, self.rownumb))
         self.repack()
 
+
+class Pxbutton(ctk.CTkButton):
+    def __init__(self, master, col, row, **kwargs):
+        super().__init__(master, text='',width=25, height=25, command=self.statechange, **kwargs)
+        self.rowmaster = master
+        self.row = row
+        self.col = col
+        self.state = False
+        self.configure(fg_color = 'black')
+        self.rowmaster.framemaster.buttons.update({(self.row, self.col): self})
+
+    def statechange(self):
+        if self.state == False:
+            self.state = True
+        elif self.state == True:
+            self.state = False
+        if self.state == False:
+            self.configure(fg_color = 'black')
+        else:
+            self.configure(fg_color = 'white')
+
+
+    def __del__(self):
+        # Remove button from rowmaster.framemaster.buttons list if it exists
+        if (self.row, self.col) in self.rowmaster.framemaster.buttons.keys():
+            self.rowmaster.framemaster.buttons.pop((self.row, self.col))
+
+        # Remove the button from rowmaster elements list
+        if self in self.rowmaster.buttons:
+            self.rowmaster.buttons.remove(self)
 
 app = App()
 app.mainloop()
