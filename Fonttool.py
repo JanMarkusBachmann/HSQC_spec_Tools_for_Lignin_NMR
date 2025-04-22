@@ -1,3 +1,5 @@
+from collections import deque
+
 import customtkinter as ctk
 import tkinter.filedialog
 
@@ -12,6 +14,7 @@ class App(ctk.CTk):
         self.deadspacesize = 1
         self.currentfontdict = dict()
         self.currentfontdictsizes = dict()
+        self.currentlettersLabel = ctk.CTkLabel(self, text=f'Current letters in font: {" ".join(self.currentfontdict.keys())}')
         self.currentfontletter = ' '
         self.fonteditor_pxfromzero_rows = 1
         self.fonteditor_pxfromzero_cols = 1
@@ -42,7 +45,7 @@ class App(ctk.CTk):
         self.rowminmaxlabelto = ctk.CTkLabel(self.rowminmaxframe, text=' > to > ').pack(side='left')
         self.currentletterrowmaxEntry = ctk.CTkEntry(self.rowminmaxframe)
         self.currentletterrowmaxEntry.pack(side='left')
-
+        self.savefilename = ''
 
 
         self.firstwindows()
@@ -94,7 +97,7 @@ class App(ctk.CTk):
             self.fonteditor_pxfromzero_cols -= 1
             self.readrowcolminmax()
             self.pxframe.gridreset()
-    def pxframeletterchange(self, event=None):
+    def pxframeletterchange(self, event):
         RN = self.pxframeletterentry.get()
         if len(RN) > 1:
             self.pxframelettermessage.configure(text="Plase enter a single character!")
@@ -149,7 +152,7 @@ class App(ctk.CTk):
                 if line == 'minmax = dict({\n':
                     issizedict = True
 
-
+        self.currentlettersLabel.configure(text=f'Current letters in font: {" ".join(self.currentfontdict.keys())}')
         self.fonteditor()
     def readrowcolminmax(self):
         if (
@@ -186,6 +189,7 @@ class App(ctk.CTk):
                     text=f'Min/Max col pixels: currently({self.currentlettermin[1]} > {self.currentlettermax[1]}) from > ')
                 self.rowminmaxlabel.configure(
                     text=f'Min/Max row pixels: currently({self.currentlettermin[0]} > {self.currentlettermax[0]}) from > ')
+                self.currentlettersLabel.configure(text=f'Current letters in font: {" ".join(self.currentfontdict.keys())}')
             else:
                 self.pxframelettermessage.configure(text=f"Letter already exists! Switched to '{RN}'")
                 if RN != self.currentfontletter:
@@ -203,12 +207,49 @@ class App(ctk.CTk):
         self.currentfontdict.update({self.currentfontletter: tuple()})
         self.pxframe.gridreset()
     def savecurrentfont(self):
-        print('omom')
+        dialog = ctk.CTkInputDialog(text="Type in a name for the current font:", title="Select saved font name")
+        self.savefilename = dialog.get_input()
+        if self.savefilename[-4:-1] != '.py':
+            self.savefilename += '.py'
+
+        writedata = []
+        writedata.append(f'deadspace = {self.deadspacesize}\n')
+        writedata.append('letters = dict({\n')
+        first = True
+        for letter in self.currentfontdict:
+            if first:
+                if len(self.currentfontdict[letter]) == 0:
+                    writedata.append(f'\t"{letter}" : tuple()\n')
+                else:
+                    writedata.append(f'\t"{letter}" : {self.currentfontdict[letter]}\n')
+                first = False
+            else:
+                if len(self.currentfontdict[letter]) == 0:
+                    writedata.append(f'\t,"{letter}" : tuple()\n')
+                else:
+                    writedata.append(f'\t,"{letter}" : {self.currentfontdict[letter]}\n')
+        writedata.append('})\n')
+        first = True
+        writedata.append('minmax = dict({\n')
+        for letter in self.currentfontdictsizes:
+            if first:
+                writedata.append(f'\t"{letter}" : {self.currentfontdictsizes[letter]}\n')
+                first = False
+            else:
+                writedata.append(f'\t,"{letter}" : {self.currentfontdictsizes[letter]}\n')
+        writedata.append('})\n')
+
+        f = open(self.savefilename, "w")
+        f.write(''.join(writedata))
+        f.close()
+
+        self.firstwindows()
     def fonteditor(self):
         self.depack()
         self.pxframe.gridreset()
 
         self.elemnts.append(ctk.CTkLabel(self, text="Please press on a pixle to activate(white) or deactivate(black) it"))
+        self.elemnts.append(self.currentlettersLabel)
 
         self.elemnts.append(ctk.CTkFrame(self))
         ctk.CTkButton(self.elemnts[-1], text='Increase row pixels', command=self.increaserow).pack(side='left', padx=10)
@@ -318,7 +359,6 @@ class Pxbutton(ctk.CTkButton):
             self.configure(fg_color = 'black')
         else:
             self.configure(fg_color = 'white')
-
     def pressed(self):
         self.statechange()
         if tuple([self.row, self.col]) not in self.rowmaster.framemaster.appmaster.currentfontdict[self.rowmaster.framemaster.appmaster.currentfontletter] and self.state:
@@ -329,7 +369,6 @@ class Pxbutton(ctk.CTkButton):
             tempRN = list(self.rowmaster.framemaster.appmaster.currentfontdict[self.rowmaster.framemaster.appmaster.currentfontletter])
             tempRN.remove(tuple([self.row, self.col]))
             self.rowmaster.framemaster.appmaster.currentfontdict.update({self.rowmaster.framemaster.appmaster.currentfontletter: tuple(tempRN)})
-
     def __del__(self):
         # Remove button from rowmaster.framemaster.buttons list if it exists
         if (self.row, self.col) in self.rowmaster.framemaster.buttons.keys():
