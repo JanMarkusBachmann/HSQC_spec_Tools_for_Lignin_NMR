@@ -131,6 +131,8 @@ class FilePNG:
         for char in list(text.lower()):
             letterboxcols += (1 + fontsx.capi_let_minmax[char][1][1]-fontsx.capi_let_minmax[char][0][1]) * scale
 
+        letterboxcols += scale * 6 #fast bugfix for text misalignmnet
+
         if (letterboxcols % 2) == 0:
             letterboxcols += 1
         if (letterboxrows % 2) == 0:
@@ -156,12 +158,15 @@ class FilePNG:
                     colepisode += 1
                     continue
                 index = 0
+                centr1stchar = (posrow + rowepisode, (centr1stchar[1] + scale * (
+                            fontsx.deadspace + 1 + fontsx.capi_let_minmax[list(text.lower())[index]][1][1] -
+                            fontsx.capi_let_minmax[list(text.lower())[index + 1]][0][1])))
                 for char in list(text.lower()):
                     for pix in fontsx.capitalletters[char]:
                         pixrow = - pix[0] * scale + centr1stchar[0]
                         pixcol =pix[1] * scale + centr1stchar[1]
                         self.data.update({(pixrow, pixcol): Pixel(colorbitcount=self.colorbitnum, preset=textcolor)})
-                    centr1stchar = (posrow + rowepisode - 1, (centr1stchar[1] + scale * (fontsx.deadspace + 1 + fontsx.capi_let_minmax[list(text.lower())[index]][1][1] - fontsx.capi_let_minmax[list(text.lower())[index + 1]][0][1])))
+                    centr1stchar = (posrow + rowepisode, (centr1stchar[1] + scale * (fontsx.deadspace + 1 + fontsx.capi_let_minmax[list(text.lower())[index]][1][1] - fontsx.capi_let_minmax[list(text.lower())[index + 1]][0][1])))
                     if index < len(text)-2:
                         index += 1
                 colepisode += 1
@@ -452,16 +457,34 @@ class Ordere3dmesh:
         print(f'Pixel color calculation progress: [{''.join(stars)}]')
         print(f'{len(syndots)} Pixel color calculation: done! Elapsed time: {elapsed:.2f} seconds')
 
-        #create a ruler object
+        target.legacyletterwrite(rulerpxmin[0] - 30, rulerpxmin[1] - 120, "Intensity", 'd', scale=3 )
 
-        rulerstartpxrow = rulerpxmin[0] + 1
-        rulerstartpxcol = rulerpxmin[1] + 1
-        rulerendpxrow = rulerpxmax[0] - 1
-        rulerendpxcol = rulerpxmax[1] - 1
+        #create a ruler object
+        target.pixfill(rulerpxmin,rulerpxmax, (0, 0, 0))
+        rulerstartpxrow = rulerpxmin[0] + 2
+        rulerstartpxcol = rulerpxmin[1] + 2
+        rulerendpxrow = rulerpxmax[0] - 2
+        rulerendpxcol = rulerpxmax[1] - 2
         pxRNcol = rulerstartpxcol
         signalvalRN = min
         step = (max - min) / (rulerendpxcol - rulerstartpxcol)
+        tenth = math.ceil(min)
         while pxRNcol <= rulerendpxcol:
+
+            if signalvalRN <= tenth <= signalvalRN + step:
+                target.pixfill((rulerpxmin[0] - 8, pxRNcol), (rulerpxmin[0], pxRNcol + 1), (0, 0, 0))
+
+                if tenth > 0:
+                    target.legacyletterwrite(rulerpxmin[0] - 27, pxRNcol - 9, "10", 'd', scale=3)
+                    target.legacyletterwrite(rulerpxmin[0] - 27 - 26, pxRNcol - 9 + 37, str(tenth), 'd', scale=3)
+                elif tenth < 0:
+                    target.legacyletterwrite(rulerpxmin[0] - 27, pxRNcol - 18, "-10", 'd', scale=3)
+                    target.legacyletterwrite(rulerpxmin[0] - 27 - 26, pxRNcol - 24 + 50, str(abs(tenth)), 'd', scale=3)
+                else:
+                    target.legacyletterwrite(rulerpxmin[0] - 27, pxRNcol + 11, "0", 'd', scale=3)
+                tenth += 1
+
+
             colorRN = colornull
             if abs(signalvalRN) > sens:
                 if signalvalRN < 0.0:
