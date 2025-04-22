@@ -2,7 +2,8 @@ import math
 
 import time
 import png
-import font5X7 as fonts
+import font5X7 as fontsx
+import font17x11 as newfont
 
 
 
@@ -77,14 +78,58 @@ class FilePNG:
         endtime = time.time()
         elapsed = endtime - starttime
         print(f'Writing {filename}, done! Elapsed time: {elapsed:.2f} seconds')
+    def textwrite(self, posrow, poscol, text, textcolor='r', scale=1):
 
-    def letterwrite(self, posrow, poscol, text, textcolor='r', scale=1):
-        letterboxrows = fonts.sizerow * scale
-        letterboxcols = (len(text) * fonts.deadspace - fonts.deadspace) * scale
+        letterboxrows = newfont.sizerow * scale
+        letterboxcols = (len(text) * newfont.deadspace - newfont.deadspace) * scale
+
+        for char in list(text.lower()):
+            letterboxcols += (1 + newfont.letters[char][1][1] - newfont.letters[char][0][1]) * scale
+
+        if (letterboxcols % 2) == 0:
+            letterboxcols += 1
+        if (letterboxrows % 2) == 0:
+            letterboxrows += 1
+
+        rowepisode = 0
+
+        while rowepisode < scale:
+            colepisode = 0
+            while colepisode < scale:
+                minrowcoltip = (posrow - ((letterboxrows - 1) / 2) + rowepisode,
+                                poscol - ((letterboxcols - 1) / 2) + colepisode)
+                centr1stchar = (minrowcoltip[0] + ((newfont.minmax[list(text.lower())[0]][1][0] -
+                                                    newfont.minmax[list(text.lower())[0]][0][0]) / 2) * scale,
+                                minrowcoltip[1] + ((newfont.minmax[list(text.lower())[0]][1][1] -
+                                                    newfont.minmax[list(text.lower())[0]][0][1]) / 2) * scale)
+
+                if len(text) == 1:
+                    for pix in newfont.letters[char]:
+                        pixrow = - pix[0] * scale + centr1stchar[0]
+                        pixcol = pix[1] * scale + centr1stchar[1]
+                        self.data.update({(pixrow, pixcol): Pixel(colorbitcount=self.colorbitnum, preset=textcolor)})
+                    colepisode += 1
+                    continue
+                index = 0
+                for char in list(text.lower()):
+                    for pix in newfont.letters[char]:
+                        pixrow = - pix[0] * scale + centr1stchar[0]
+                        pixcol = pix[1] * scale + centr1stchar[1]
+                        self.data.update({(pixrow, pixcol): Pixel(colorbitcount=self.colorbitnum, preset=textcolor)})
+                    centr1stchar = (posrow + rowepisode - 1, (centr1stchar[1] + scale * (
+                                newfont.deadspace + 1 + newfont.minmax[list(text.lower())[index]][1][1] -
+                                newfont.minmax[list(text.lower())[index + 1]][0][1])))
+                    if index < len(text) - 2:
+                        index += 1
+                colepisode += 1
+            rowepisode += 1
+    def legacyletterwrite(self, posrow, poscol, text, textcolor='r', scale=1):
+        letterboxrows = fontsx.sizerow * scale
+        letterboxcols = (len(text) * fontsx.deadspace - fontsx.deadspace) * scale
 
 
         for char in list(text.lower()):
-            letterboxcols += (1 + fonts.capi_let_minmax[char][1][1]-fonts.capi_let_minmax[char][0][1]) * scale
+            letterboxcols += (1 + fontsx.capi_let_minmax[char][1][1]-fontsx.capi_let_minmax[char][0][1]) * scale
 
         if (letterboxcols % 2) == 0:
             letterboxcols += 1
@@ -98,13 +143,13 @@ class FilePNG:
             colepisode = 0
             while colepisode < scale:
                 minrowcoltip = (posrow - ((letterboxrows - 1) / 2) + rowepisode, poscol - ((letterboxcols - 1) / 2) + colepisode)
-                centr1stchar = (minrowcoltip[0] + ((fonts.capi_let_minmax[list(text.lower())[0]][1][0] -
-                                                    fonts.capi_let_minmax[list(text.lower())[0]][0][0]) / 2) * scale,
-                                minrowcoltip[1] + ((fonts.capi_let_minmax[list(text.lower())[0]][1][1] -
-                                                    fonts.capi_let_minmax[list(text.lower())[0]][0][1]) / 2) * scale)
+                centr1stchar = (minrowcoltip[0] + ((fontsx.capi_let_minmax[list(text.lower())[0]][1][0] -
+                                                    fontsx.capi_let_minmax[list(text.lower())[0]][0][0]) / 2) * scale,
+                                minrowcoltip[1] + ((fontsx.capi_let_minmax[list(text.lower())[0]][1][1] -
+                                                    fontsx.capi_let_minmax[list(text.lower())[0]][0][1]) / 2) * scale)
 
                 if len(text) == 1:
-                    for pix in fonts.capitalletters[char]:
+                    for pix in fontsx.capitalletters[char]:
                         pixrow = - pix[0] * scale + centr1stchar[0]
                         pixcol = pix[1] * scale + centr1stchar[1]
                         self.data.update({(pixrow, pixcol): Pixel(colorbitcount=self.colorbitnum, preset=textcolor)})
@@ -112,11 +157,11 @@ class FilePNG:
                     continue
                 index = 0
                 for char in list(text.lower()):
-                    for pix in fonts.capitalletters[char]:
+                    for pix in fontsx.capitalletters[char]:
                         pixrow = - pix[0] * scale + centr1stchar[0]
                         pixcol =pix[1] * scale + centr1stchar[1]
                         self.data.update({(pixrow, pixcol): Pixel(colorbitcount=self.colorbitnum, preset=textcolor)})
-                    centr1stchar = (posrow + rowepisode - 1, (centr1stchar[1] + scale * (fonts.deadspace + 1 + fonts.capi_let_minmax[list(text.lower())[index]][1][1] - fonts.capi_let_minmax[list(text.lower())[index + 1]][0][1])))
+                    centr1stchar = (posrow + rowepisode - 1, (centr1stchar[1] + scale * (fontsx.deadspace + 1 + fontsx.capi_let_minmax[list(text.lower())[index]][1][1] - fontsx.capi_let_minmax[list(text.lower())[index + 1]][0][1])))
                     if index < len(text)-2:
                         index += 1
                 colepisode += 1
@@ -170,24 +215,24 @@ class FilePNG:
         elif xmax < 0:
             self.pixfill(((graph_area_min[0]), graph_area_min[1]), ((graph_area_min[0]), graph_area_max[1]), color=(0, 0, 255))
 
-    def gradientgraph (self, importdata, xrange, yrange, xaxismaj, yaxismaj, axiscolor, textcolor, textscale, graph_area_min, graph_area_max, sens, islog, colormin, colornull, colorzero, colormax, ramp, exp):
+    def gradientgraph (self, importdata, xrange, yrange, xaxismaj, yaxismaj, axiscolor, textcolor, textscale, graph_area_min, graph_area_max, sens, islog, colormin, colornull, colorzero, colormax, ramp, exp, rulerpxmin, rulerpxmax):
         mesh = Ordere3dmesh(importdata)
-        mesh.pixelprintout(self, xrange, yrange, graph_area_min, graph_area_max, sens, islog, colormin, colornull, colorzero, colormax, ramp, exp)
+        mesh.pixelprintout(self, xrange, yrange, graph_area_min, graph_area_max, sens, islog, colormin, colornull, colorzero, colormax, ramp, exp, rulerpxmin, rulerpxmax)
         px2y = (graph_area_max[0] - graph_area_min[0]) / (yrange[1] - yrange[0])
         px2x = (graph_area_max[1] - graph_area_min[1]) / (xrange[1] - xrange[0])
 
         xRN = xrange[1]
         while xRN >= xrange[0]:
             self.pixfill((graph_area_min[0], round(graph_area_max[1] - (xRN-xrange[0])*px2x)), (graph_area_max[0], round(graph_area_max[1] - (xRN-xrange[0])*px2x)), color=axiscolor)
-            self.letterwrite(graph_area_min[0] - 8 * textscale, round(graph_area_max[1] - (xRN-xrange[0])*px2x), str(round(xRN, 2)), textcolor=textcolor, scale=textscale)
-            self.letterwrite(graph_area_max[0] + 8 * textscale, round(graph_area_max[1] - (xRN-xrange[0])*px2x), str(round(xRN, 2)), textcolor=textcolor, scale=textscale)
+            self.legacyletterwrite(graph_area_min[0] - 8 * textscale, round(graph_area_max[1] - (xRN - xrange[0]) * px2x), str(round(xRN, 2)), textcolor=textcolor, scale=textscale)
+            self.legacyletterwrite(graph_area_max[0] + 8 * textscale, round(graph_area_max[1] - (xRN - xrange[0]) * px2x), str(round(xRN, 2)), textcolor=textcolor, scale=textscale)
             xRN -= xaxismaj
 
         yRN = yrange[1]
         while yRN >= yrange[0]:
             self.pixfill((round((yRN-yrange[0]) * px2y + graph_area_min[0]), graph_area_min[1]), (round((yRN-yrange[0])*px2y+graph_area_min[0]), graph_area_max[1]), color=axiscolor)
-            self.letterwrite(round((yRN - yrange[0]) * px2y + graph_area_min[0]), graph_area_min[1] - 15 * textscale, str(round(yRN, 2)), textcolor=textcolor, scale=textscale)
-            self.letterwrite(round((yRN - yrange[0]) * px2y + graph_area_min[0]), graph_area_max[1] + 15 * textscale, str(round(yRN, 2)), textcolor=textcolor, scale=textscale)
+            self.legacyletterwrite(round((yRN - yrange[0]) * px2y + graph_area_min[0]), graph_area_min[1] - 15 * textscale, str(round(yRN, 2)), textcolor=textcolor, scale=textscale)
+            self.legacyletterwrite(round((yRN - yrange[0]) * px2y + graph_area_min[0]), graph_area_max[1] + 15 * textscale, str(round(yRN, 2)), textcolor=textcolor, scale=textscale)
 
             yRN -= yaxismaj
 
@@ -302,7 +347,7 @@ class Ordere3dmesh:
 
         f.close()
 
-    def pixelprintout(self, target, xrange, yrange, graph_area_min, graph_area_max, sens, islog, colormin, colorzero, colornull, colormax, ramp, exponent):
+    def pixelprintout(self, target, xrange, yrange, graph_area_min, graph_area_max, sens, islog, colormin, colorzero, colornull, colormax, ramp, exponent, rulerpxmin, rulerpxmax):
         #calculate how many pixels one ppm of spectral data would be, since there is a given range in both axies, it might varie betweenm function calls
         starttimeall = time.time()
         print(f'Ordere3dmesh: pixelprintout, started sorting {(graph_area_max[0] - graph_area_min[0])*(graph_area_max[1] - graph_area_min[1])} pixels')
@@ -406,6 +451,33 @@ class Ordere3dmesh:
         elapsed =  endtimeall - starttimemid
         print(f'Pixel color calculation progress: [{''.join(stars)}]')
         print(f'{len(syndots)} Pixel color calculation: done! Elapsed time: {elapsed:.2f} seconds')
+
+        #create a ruler object
+
+        rulerstartpxrow = rulerpxmin[0] + 1
+        rulerstartpxcol = rulerpxmin[1] + 1
+        rulerendpxrow = rulerpxmax[0] - 1
+        rulerendpxcol = rulerpxmax[1] - 1
+        pxRNcol = rulerstartpxcol
+        signalvalRN = min
+        step = (max - min) / (rulerendpxcol - rulerstartpxcol)
+        while pxRNcol <= rulerendpxcol:
+            colorRN = colornull
+            if abs(signalvalRN) > sens:
+                if signalvalRN < 0.0:
+                    colorRN = (round(colorzero[0] + vec_zero2min[0] * math.atan(((signalvalRN + sens) / (min + sens)) ** exponent * ramp) * 2 / math.pi), round(
+                        colorzero[1] + vec_zero2min[1] * math.atan(((signalvalRN + sens) / (min + sens)) ** exponent * ramp) * 2 / math.pi), round(
+                        colorzero[2] + vec_zero2min[2] * math.atan(((signalvalRN + sens) / (min + sens)) ** exponent * ramp) * 2 / math.pi))
+                elif signalvalRN > 0.0:
+                    colorRN = (round(colorzero[0] + vec_zero2max[0] * math.atan(((signalvalRN - sens) / (max - sens)) ** exponent * ramp) * 2 / math.pi), round(
+                        colorzero[1] + vec_zero2max[1] * math.atan(((signalvalRN - sens) / (max - sens)) ** exponent * ramp) * 2 / math.pi), round(
+                        colorzero[2] + vec_zero2max[2] * math.atan(((signalvalRN - sens) / (max - sens)) ** exponent * ramp) * 2 / math.pi))
+            pxRNrow = rulerstartpxrow
+            while pxRNrow <= rulerendpxrow:
+                target.data.update({(pxRNrow, pxRNcol): Pixel(colorRN[0], colorRN[1], colorRN[2], target.colorbitnum)})
+                pxRNrow += 1
+            pxRNcol += 1
+            signalvalRN += step
 
     def fatneighbours(self, f1, f2):
         # calculate the value of artificial point in position (f1, f2) depending on their neighbours weighted average
