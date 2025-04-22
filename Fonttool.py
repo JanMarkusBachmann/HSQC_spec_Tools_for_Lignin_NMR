@@ -163,6 +163,7 @@ class App(ctk.CTk):
         ):
             self.currentlettermin = (self.currentletterrowminEntry.get(), self.currentlettercolminEntry.get())
             self.currentlettermax = (self.currentletterrowmaxEntry.get(), self.currentlettercolmaxEntry.get())
+            self.currentfontdictsizes.update({self.currentfontletter: tuple([tuple([int(self.currentlettermin[0]), int(self.currentlettermin[1])]), tuple([int(self.currentlettermax[0]), int(self.currentlettermax[1])])])})
         else:
             self.currentlettermin = (-self.fonteditor_pxfromzero_rows, -self.fonteditor_pxfromzero_cols)
             self.currentlettermax = (self.fonteditor_pxfromzero_rows, self.fonteditor_pxfromzero_cols)
@@ -256,8 +257,8 @@ class App(ctk.CTk):
         ctk.CTkButton(self.elemnts[-1], text='decrease row pixels', command=self.decreaserow).pack(side='left', padx=10)
 
         self.elemnts.append(ctk.CTkFrame(self))
-        ctk.CTkButton(self.elemnts[-1], text='Increase row pixels', command=self.increasecolumn).pack(side='left', padx=10)
-        ctk.CTkButton(self.elemnts[-1], text='decrease row pixels', command=self.decreasecolumn).pack(side='left', padx=10)
+        ctk.CTkButton(self.elemnts[-1], text='Increase col pixels', command=self.increasecolumn).pack(side='left', padx=10)
+        ctk.CTkButton(self.elemnts[-1], text='decrease col pixels', command=self.decreasecolumn).pack(side='left', padx=10)
 
         self.elemnts.append(self.pxframelettermessage)
         self.elemnts.append(self.pxframeletterentry)
