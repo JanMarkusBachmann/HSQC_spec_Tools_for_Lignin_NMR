@@ -460,7 +460,7 @@ class Ordere3dmesh:
         target.legacyletterwrite(rulerpxmin[0] - 30, rulerpxmin[1] - 120, "Intensity", 'd', scale=3 )
 
         #create a ruler object
-        target.pixfill(rulerpxmin,rulerpxmax, (0, 0, 0))
+        target.pixfill(rulerpxmin,rulerpxmax, (0, 0, 0))su
         rulerstartpxrow = rulerpxmin[0] + 2
         rulerstartpxcol = rulerpxmin[1] + 2
         rulerendpxrow = rulerpxmax[0] - 2
