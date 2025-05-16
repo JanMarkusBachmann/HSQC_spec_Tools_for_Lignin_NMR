@@ -1,7 +1,7 @@
 import RenderingFRAME as fr
 import time
 
-spct = "HSQCdata/HSQC-frHL-EtOH-FEN-120325.txt"
+spct = "HSQCdata/HSQC-250404-EtOH-frHL-SA-ECH.txt"
 start = time.time()
 test = fr.FilePNG(2200, 2300, 16, background='w', name=spct.split('/')[-1].strip('.txt'))
 #test = fr.FilePNG(160, 154, 16, background='w', name='punane')
@@ -27,8 +27,8 @@ test.gradientgraph(spct,
                    (32000, 65535, 32000),
                    (65535, 65535, 65535),
                    (0, 0, 65535),
-                   700,
-                   4,
+                   1000,
+                   5,
                    (2230, 1000),
                    (2280, 2000))
 #test.gradientgraph(spct, (2, 5),(30, 90),0.25,5,(32000, 32000, 32000),'d',4,(150,200),(2000, 2000),35000,True,(65535, 0, 0),(32000, 65535, 32000),(65535, 65535, 65535),(0, 0, 65535), 500, 5, (2200, 1000), (2250, 2000))

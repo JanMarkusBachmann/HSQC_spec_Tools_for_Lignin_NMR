@@ -221,20 +221,20 @@ class FilePNG:
             self.pixfill(((graph_area_min[0]), graph_area_min[1]), ((graph_area_min[0]), graph_area_max[1]), color=(0, 0, 255))
 
     def gradientgraph (self, mesh, xoffset, yoffset, xrange, yrange, xaxismaj, yaxismaj, axiscolor, textcolor, textscale, graph_area_min, graph_area_max, sens, islog, colormin, colornull, colorzero, colormax, ramp, exp, rulerpxmin, rulerpxmax, rulermessage):
-        mesh.pixelprintout(self, xrange, yrange, graph_area_min, graph_area_max, sens, islog, colormin, colornull, colorzero, colormax, ramp, exp, rulerpxmin, rulerpxmax, rulermessage)
+        mesh.pixelprintout(self, xrange, yrange, graph_area_min, graph_area_max, sens, islog, colormin, colornull, colorzero, colormax, ramp, exp, rulerpxmin, rulerpxmax, rulermessage, xoffset, yoffset)
         px2y = (graph_area_max[0] - graph_area_min[0]) / (yrange[1] - yrange[0])
         px2x = (graph_area_max[1] - graph_area_min[1]) / (xrange[1] - xrange[0])
 
         xRN = xrange[1]
         while xRN >= xrange[0]:
-            self.pixfill((graph_area_min[0], round(graph_area_max[1] - (xRN-xrange[0])*px2x)), (graph_area_max[0], round(graph_area_max[1] - (xRN-xrange[0])*px2x)), color=axiscolor)
+            self.pixfill((graph_area_min[0], round(graph_area_max[1] - (xRN- xrange[0])*px2x)), (graph_area_max[0], round(graph_area_max[1] - (xRN- xrange[0])*px2x)), color=axiscolor)
             self.legacyletterwrite(graph_area_min[0] - 8 * textscale, round(graph_area_max[1] - (xRN - xrange[0]) * px2x), str(round(xRN, 2)), textcolor=textcolor, scale=textscale)
             self.legacyletterwrite(graph_area_max[0] + 8 * textscale, round(graph_area_max[1] - (xRN - xrange[0]) * px2x), str(round(xRN, 2)), textcolor=textcolor, scale=textscale)
             xRN -= xaxismaj
 
         yRN = yrange[1]
         while yRN >= yrange[0]:
-            self.pixfill((round((yRN-yrange[0]) * px2y + graph_area_min[0]), graph_area_min[1]), (round((yRN-yrange[0])*px2y+graph_area_min[0]), graph_area_max[1]), color=axiscolor)
+            self.pixfill((round((yRN -yrange[0]) * px2y + graph_area_min[0]), graph_area_min[1]), (round((yRN-yrange[0])*px2y+graph_area_min[0]), graph_area_max[1]), color=axiscolor)
             self.legacyletterwrite(round((yRN - yrange[0]) * px2y + graph_area_min[0]), graph_area_min[1] - 15 * textscale, str(round(yRN, 2)), textcolor=textcolor, scale=textscale)
             self.legacyletterwrite(round((yRN - yrange[0]) * px2y + graph_area_min[0]), graph_area_max[1] + 15 * textscale, str(round(yRN, 2)), textcolor=textcolor, scale=textscale)
 
@@ -351,7 +351,7 @@ class Ordere3dmesh:
 
         f.close()
 
-    def pixelprintout(self, target, xrange, yrange, graph_area_min, graph_area_max, sens, islog, colormin, colorzero, colornull, colormax, ramp, exponent, rulerpxmin, rulerpxmax, rulermessage):
+    def pixelprintout(self, target, xrange, yrange, graph_area_min, graph_area_max, sens, islog, colormin, colorzero, colornull, colormax, ramp, exponent, rulerpxmin, rulerpxmax, rulermessage, xoffset, yoffset):
         #calculate how many pixels one ppm of spectral data would be, since there is a given range in both axies, it might varie betweenm function calls
         starttimeall = time.time()
         print(f'Ordere3dmesh: pixelprintout, started sorting {(graph_area_max[0] - graph_area_min[0])*(graph_area_max[1] - graph_area_min[1])} pixels')
@@ -394,7 +394,7 @@ class Ordere3dmesh:
                     print(f'Pixel filtering progress: [{''.join(stars)}]')
                     stars[nstars] = '*'
                     nstars += 1
-                val = self.fatneighbours(rowRN, colRN)
+                val = self.fatneighbours(rowRN + yoffset, colRN + xoffset)
                 if (abs(val) >= sens):
                     syndots.append([rowRN, colRN, round(graph_area_min[0] + (rowRN - yrange[0])/f1_2px), round(graph_area_max[1] - (colRN - xrange[0])/f2_2px), val])
                     if max < val:
@@ -411,13 +411,23 @@ class Ordere3dmesh:
         print(f'Pixel filtering progress: [{''.join(stars)}]')
         print(f'Pixel filtering progress: done! Elapsed time: {elapsed:.2f} seconds')
         print(f'Filtered out {(graph_area_max[0] - graph_area_min[0])*(graph_area_max[1] - graph_area_min[1]) - len(syndots)} pixels that are under sensitivity of {sens}')
-
+        print(f'enne log: min {min}, max {max}, sens {sens}')
         if islog:
-            min = -math.log10(abs(min))
-            max = math.log10(abs(max))
+            if min < 0.0:
+                min = -math.log10(abs(min))
+            elif min == 0.0:
+                min = -1.0
+            else:
+                min = math.log10(abs(min))
+            if max > 0.0:
+                max = math.log10(abs(max))
+            elif max == 0.0:
+                max = 1.0
+            else:
+                max = -math.log10(abs(max))
             sens = math.log10(abs(sens))
         #calculate pixel color values
-
+        print(f'parastlog log: min {min}, max {max}, sens {sens}')
         print(f'Ordere3dmesh: pixelprintout, starting color calculations of {len(syndots)} pixels')
         stars = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
         counter = 0
@@ -456,7 +466,7 @@ class Ordere3dmesh:
         print(f'Pixel color calculation progress: [{''.join(stars)}]')
         print(f'{len(syndots)} Pixel color calculation: done! Elapsed time: {elapsed:.2f} seconds')
 
-        target.legacyletterwrite(rulerpxmin[0] - 30, rulerpxmin[1] - 120, rulermessage, 'd', scale=3 )
+        target.legacyletterwrite(rulerpxmin[0] - 30, rulerpxmin[1] - 150, rulermessage, 'd', scale=3 )
 
         #create a ruler object
         target.pixfill(rulerpxmin,rulerpxmax, (0, 0, 0))
