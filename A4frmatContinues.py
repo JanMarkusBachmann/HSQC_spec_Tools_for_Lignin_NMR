@@ -2,7 +2,7 @@ import RenderingFRAMEcontinues as frc
 
 xoffset = 0.025
 yoffset = 0.75
-xrange = (2.0, 5.0)
+xrange = (2, 6)
 yrange = (25, 85)
 xaxismaj = 0.25
 yaxismaj = 5
@@ -14,7 +14,10 @@ rulermessage = 'Intensiivsus skaala:'
 spct = "HSQCdata/HSQC-250404-EtOH-frHL-SA-ECH.txt"
 
 mesh = frc.Ordere3dmesh(spct)
-pngfile = frc.FilePNG(1600, 1000, 16, background='w', name=spct.split('/')[-1].strip('.txt'))
+pngfile = frc.FilePNG(2100, 2970, 16, background='w', name=spct.split('/')[-1].strip('.txt'))
+pngfile.legacyletterwrite(50, 1000, spct.split('/')[-1].strip('.txt'), 'd', 6)
+pngfile.legacyletterwrite(2670, 90, '13C (ppm)', 'd', 4)
+pngfile.legacyletterwrite(2600, 400, '1H (ppm)', 'd', 4)
 
 keyRN = ' '
 
@@ -22,10 +25,6 @@ while keyRN != 'q':
     if keyRN == 'q':
         break
     if keyRN != ' ':
-        pngfile.pixfill((0, 0), (1000, 1600), (65535, 65535, 65535))
-        pngfile.legacyletterwrite(50, 1000, spct.split('/')[-1].strip('.txt'), 'd', 6)
-        pngfile.legacyletterwrite(950, 90, '13C (ppm)', 'd', 4)
-        pngfile.legacyletterwrite(950, 400, '1H (ppm)', 'd', 4)
         pngfile.gradientgraph(mesh,
                               xoffset,
                               yoffset,
@@ -35,9 +34,9 @@ while keyRN != 'q':
                               yaxismaj,
                               (32000, 32000, 32000),
                            'd',
-                              3,
+                              4,
                               (150, 150),
-                              (800, 1450),
+                              (2500, 1950),
                               sens,
                               True,
                               (65535, 0, 0),
@@ -46,8 +45,8 @@ while keyRN != 'q':
                               (0, 0, 65535),
                               ramp,
                               exp,
-                              (950, 550),
-                              (990, 1550),
+                              (2830, 1000),
+                              (2880, 2000),
                               rulermessage)
         pngfile.filewrite()
 
