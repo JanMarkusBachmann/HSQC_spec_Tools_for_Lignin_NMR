@@ -2,16 +2,16 @@ import RenderingFRAMEcontinues as frc
 
 xoffset = 0.025
 yoffset = 0.75
-xrange = (2, 6)
-yrange = (25, 85)
-xaxismaj = 0.25
+xrange = (0.5, 9)
+yrange = (5, 145)
+xaxismaj = 0.5
 yaxismaj = 5
 sens = 20000
 ramp = 700
 exp = 4
 rulermessage = 'Intensiivsus skaala:'
 
-spct = "HSQCdata/HSQC-250404-EtOH-frHL-SA-ECH.txt"
+spct = ("HSQCdata/240131-96MeTHF-frHL-HSQC.txt")
 
 mesh = frc.Ordere3dmesh(spct)
 pngfile = frc.FilePNG(2100, 2970, 16, background='w', name=spct.split('/')[-1].strip('.txt'))

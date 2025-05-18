@@ -2,19 +2,19 @@ import RenderingFRAMEcontinues as frc
 
 xoffset = 0.025
 yoffset = 0.75
-xrange = (2.0, 5.0)
-yrange = (25, 85)
-xaxismaj = 0.25
-yaxismaj = 5
+xrange = (2.4, 4.4)
+yrange = (40, 76)
+xaxismaj = 0.2
+yaxismaj = 2
 sens = 20000
-ramp = 700
-exp = 4
+ramp = 500
+exp = 5
 rulermessage = 'Intensiivsus skaala:'
 
-spct = "HSQCdata/HSQC-250404-EtOH-frHL-SA-ECH.txt"
+spct = "HSQCdata/HSQC-250404-EtOH-frHL-FEN-ECH.txt"
 
 mesh = frc.Ordere3dmesh(spct)
-pngfile = frc.FilePNG(1600, 1000, 16, background='w', name=spct.split('/')[-1].strip('.txt'))
+pngfile = frc.FilePNG(1000, 1000, 16, background='w', name=spct.split('/')[-1].strip('.txt'))
 
 keyRN = ' '
 
@@ -22,10 +22,10 @@ while keyRN != 'q':
     if keyRN == 'q':
         break
     if keyRN != ' ':
-        pngfile.pixfill((0, 0), (1000, 1600), (65535, 65535, 65535))
-        pngfile.legacyletterwrite(50, 1000, spct.split('/')[-1].strip('.txt'), 'd', 6)
-        pngfile.legacyletterwrite(950, 90, '13C (ppm)', 'd', 4)
-        pngfile.legacyletterwrite(950, 400, '1H (ppm)', 'd', 4)
+        pngfile.pixfill((0, 0), (1000, 1000), (65535, 65535, 65535))
+        pngfile.legacyletterwrite(10, 500, spct.split('/')[-1].strip('.txt'), 'd', 2)
+        pngfile.legacyletterwrite(945, 90, '13C (ppm)', 'd', 3)
+        pngfile.legacyletterwrite(975, 90, '1H (ppm)', 'd', 3)
         pngfile.gradientgraph(mesh,
                               xoffset,
                               yoffset,
@@ -36,8 +36,8 @@ while keyRN != 'q':
                               (32000, 32000, 32000),
                            'd',
                               3,
-                              (150, 150),
-                              (800, 1450),
+                              (75, 75),
+                              (825, 925),
                               sens,
                               True,
                               (65535, 0, 0),
@@ -46,8 +46,8 @@ while keyRN != 'q':
                               (0, 0, 65535),
                               ramp,
                               exp,
-                              (950, 550),
-                              (990, 1550),
+                              (950, 200),
+                              (990, 970),
                               rulermessage)
         pngfile.filewrite()
 
@@ -76,7 +76,7 @@ while keyRN != 'q':
             case '4':
                 print('Enter new sensitivity value')
                 sens = float(input('new value:'))
-            case 5:
+            case '5':
                 print('Enter new ramp function parameter')
                 ramp = float(input('new value:'))
             case '6':

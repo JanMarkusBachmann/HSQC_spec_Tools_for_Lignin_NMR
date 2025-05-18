@@ -466,7 +466,7 @@ class Ordere3dmesh:
         print(f'Pixel color calculation progress: [{''.join(stars)}]')
         print(f'{len(syndots)} Pixel color calculation: done! Elapsed time: {elapsed:.2f} seconds')
 
-        target.legacyletterwrite(rulerpxmin[0] - 30, rulerpxmin[1] - 150, rulermessage, 'd', scale=3 )
+        target.legacyletterwrite(rulerpxmin[0] - 30, rulerpxmin[1] - 96, rulermessage, 'd', scale=2 )
 
         #create a ruler object
         target.pixfill(rulerpxmin,rulerpxmax, (0, 0, 0))
@@ -524,7 +524,10 @@ class Ordere3dmesh:
             return self.data[(rowRN, colRN)]
         else:
             weight += 1/(distanse**2)
-            val_weight += (self.data[(rowRN, colRN)] / (distanse**2))
+            try:
+                val_weight += (self.data[(rowRN, colRN)] / (distanse**2))
+            except KeyError:
+                val_weight += 0.0
 
         rowRN = f1 // self.stepperrow + 1
         colRN = f2 // self.steppercol
@@ -534,7 +537,10 @@ class Ordere3dmesh:
             return self.data[(rowRN, colRN)]
         else:
             weight += 1 / (distanse ** 2)
-            val_weight += self.data[(rowRN, colRN)] / (distanse ** 2)
+            try:
+                val_weight += (self.data[(rowRN, colRN)] / (distanse ** 2))
+            except KeyError:
+                val_weight += 0.0
 
         rowRN = f1 // self.stepperrow
         colRN = f2 // self.steppercol + 1
@@ -544,7 +550,10 @@ class Ordere3dmesh:
             return self.data[(rowRN, colRN)]
         else:
             weight += 1 / (distanse ** 2)
-            val_weight += self.data[(rowRN, colRN)] / (distanse ** 2)
+            try:
+                val_weight += (self.data[(rowRN, colRN)] / (distanse ** 2))
+            except KeyError:
+                val_weight += 0.0
 
         rowRN = f1 // self.stepperrow + 1
         colRN = f2 // self.steppercol + 1
@@ -554,7 +563,10 @@ class Ordere3dmesh:
             return self.data[(rowRN, colRN)]
         else:
             weight += 1 / (distanse ** 2)
-            val_weight += self.data[(rowRN, colRN)] / (distanse ** 2)
+            try:
+                val_weight += (self.data[(rowRN, colRN)] / (distanse ** 2))
+            except KeyError:
+                val_weight += 0.0
 
         return val_weight/weight
 
